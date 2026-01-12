@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dew Point Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root{
+  --primary:#0ea5e9;
+  --bg:#f4f6fb;
+  --card:#ffffff;
+  --radius:14px;
+  --text:#1f2937;
+  --muted:#6b7280;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,Arial;
+  background:var(--bg);
+  color:var(--text);
+}
+.container{max-width:960px;margin:auto;padding:16px}
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:0 12px 28px rgba(0,0,0,.08);
+  margin-bottom:22px;
+  padding:20px;
+}
+h1,h3{margin:0;color:var(--primary)}
+small{color:var(--muted)}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+label{font-size:14px;margin-bottom:6px;display:block}
+
+input,select{
+  width:100%;
+  height:48px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #d1d5db;
+  font-size:15px;
+}
+
+button{
+  width:100%;
+  height:52px;
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  cursor:pointer;
+  margin-top:14px;
+}
+
+.result{
+  margin-top:16px;
+  background:#f9fafb;
+  border-radius:12px;
+  padding:16px;
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:13px;
+  margin:6px 6px 0 0;
+  background:#e0f2fe;
+  color:#075985;
+}
+
+.table-box{margin-top:14px;overflow-x:auto}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+th,td{
+  padding:12px;
+  text-align:center;
+  border-bottom:1px solid #e5e7eb;
+}
+th{
+  background:#e0f2fe;
+  color:#075985;
+}
+
+.warning{
+  color:#b91c1c;
+  font-weight:600;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="card">
+<h1>💧 Dew Point Calculator</h1>
+<small>WMO / NOAA standard · Magnus–Tetens formula · Scientifically accurate</small>
+</div>
+
+<div class="card">
+<h3>Atmospheric Conditions</h3>
+
+<div class="grid">
+<div>
+<label>Air Temperature</label>
+<input type="number" id="tempInput" placeholder="e.g. 30">
+</div>
+
+<div>
+<label>Temperature Unit</label>
+<select id="tempUnit">
+<option value="C">Celsius (°C)</option>
+<option value="F">Fahrenheit (°F)</option>
+<option value="K">Kelvin (K)</option>
+</select>
+</div>
+
+<div>
+<label>Relative Humidity (%)</label>
+<input type="number" id="humidityInput" placeholder="e.g. 65" min="0" max="100">
+</div>
+</div>
+
+<button onclick="calculateDewPoint()">Calculate Dew Point</button>
+
+<div id="output" class="result">Enter values to calculate dew point.</div>
+</div>
+
+</div>
+
+<script>
+function calculateDewPoint(){
+  const out=document.getElementById("output");
+
+  const Tval=parseFloat(tempInput.value);
+  const RH=parseFloat(humidityInput.value);
+  const unit=tempUnit.value;
+
+  if(isNaN(Tval)||isNaN(RH)){
+    out.innerHTML="Please enter temperature and humidity.";
+    return;
+  }
+
+  if(RH<=0||RH>100){
+    out.innerHTML="<div class='warning'>Relative humidity must be between 0% and 100%.</div>";
+    return;
+  }
+
+  /* ---- Convert temperature to Celsius ---- */
+  let T_C,T_F,T_K;
+  if(unit==="C"){ 
+    T_C=Tval; 
+    T_F=T_C*9/5+32; 
+    T_K=T_C+273.15; 
+  }
+  if(unit==="F"){ 
+    T_F=Tval; 
+    T_C=(T_F-32)*5/9; 
+    T_K=T_C+273.15; 
+  }
+  if(unit==="K"){ 
+    if(Tval<=0){
+      out.innerHTML="<div class='warning'>Kelvin temperature must be greater than 0 K.</div>";
+      return;
+    }
+    T_K=Tval; 
+    T_C=T_K-273.15; 
+    T_F=T_C*9/5+32; 
+  }
+
+  /* ---- Magnus–Tetens constants ---- */
+  const a=17.27;
+  const b=237.7;
+
+  const gamma=Math.log(RH/100)+(a*T_C)/(b+T_C);
+  const Td_C=(b*gamma)/(a-gamma);
+  const Td_F=Td_C*9/5+32;
+  const Td_K=Td_C+273.15;
+
+  /* ---- Comfort classification ---- */
+  const comfort =
+    Td_C >= 24 ? "Extremely humid (oppressive)" :
+    Td_C >= 21 ? "Very humid (uncomfortable)" :
+    Td_C >= 16 ? "Humid" :
+    Td_C >= 10 ? "Comfortable" :
+    Td_C >= 0  ? "Dry" :
+    "Very dry";
+
+  const badgeValue =
+    unit==="F" ? `${Td_F.toFixed(1)} °F` :
+    unit==="K" ? `${Td_K.toFixed(1)} K` :
+    `${Td_C.toFixed(1)} °C`;
+
+  out.innerHTML=`
+    <span class="badge">Dew Point: ${badgeValue}</span>
+    <span class="badge">${comfort}</span>
+
+    <div class="table-box">
+    <table>
+      <tr><th>Parameter</th><th>Value</th></tr>
+      <tr><td>Air Temperature</td><td>${T_C.toFixed(1)} °C / ${T_F.toFixed(1)} °F / ${T_K.toFixed(1)} K</td></tr>
+      <tr><td>Relative Humidity</td><td>${RH.toFixed(1)} %</td></tr>
+      <tr><td>Dew Point</td><td>${Td_C.toFixed(1)} °C / ${Td_F.toFixed(1)} °F / ${Td_K.toFixed(1)} K</td></tr>
+      <tr><td>Comfort Level</td><td>${comfort}</td></tr>
+    </table>
+    </div>
+  `;
+}
+</script>
+
+</body>
+</html>
