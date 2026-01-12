@@ -141,39 +141,38 @@ th{
 
 <script>
 function calculateDewPoint(){
-  const out=document.getElementById("output");
+  const out = document.getElementById("output");
 
-  const Tval=parseFloat(tempInput.value);
-  const RH=parseFloat(humidityInput.value);
-  const unit=tempUnit.value;
+  const Tval = parseFloat(tempInput.value);
+  const RH = parseFloat(humidityInput.value);
+  const unit = tempUnit.value;
 
-  if(isNaN(Tval)||isNaN(RH)){
-    out.innerHTML="Please enter temperature and humidity.";
+  if (isNaN(Tval) || isNaN(RH)) {
+    out.innerHTML = "Please enter temperature and humidity.";
     return;
   }
 
-  if(RH<=0||RH>100){
-    out.innerHTML="<div class='warning'>Relative humidity must be between 0% and 100%.</div>";
+  if (RH <= 0 || RH > 100) {
+    out.innerHTML = "<div class='warning'>Relative humidity must be between 0% and 100%.</div>";
     return;
   }
 
-  /* ---- Convert temperature to Celsius ---- */
-  let T_C,T_F,T_K;
+  let T_C, T_F, T_K;
 
-  if(unit==="C"){ 
-    T_C=Tval; 
-    T_F=T_C*9/5+32; 
-    T_K=T_C+273.15; 
+  if (unit === "C") {
+    T_C = Tval;
+    T_F = T_C * 9 / 5 + 32;
+    T_K = T_C + 273.15;
   }
 
-  if(unit==="F"){ 
-    T_F=Tval; 
-    T_C=(T_F-32)*5/9; 
-    T_K=T_C+273.15; 
+  if (unit === "F") {
+    T_F = Tval;
+    T_C = (T_F - 32) * 5 / 9;
+    T_K = T_C + 273.15;
   }
 
-  if(unit==="K"){ 
-    if(Tval < 183.15){
+  if (unit === "K") {
+    if (Tval < 183.15) {
       out.innerHTML = `
         <div class='warning'>
           Dew point is not physically defined for temperatures below −90 °C (183 K).
@@ -181,21 +180,19 @@ function calculateDewPoint(){
         </div>`;
       return;
     }
-    T_K=Tval; 
-    T_C=T_K-273.15; 
-    T_F=T_C*9/5+32; 
+    T_K = Tval;
+    T_C = T_K - 273.15;
+    T_F = T_C * 9 / 5 + 32;
   }
 
-  /* ---- Magnus–Tetens constants ---- */
-  const a=17.27;
-  const b=237.7;
+  const a = 17.27;
+  const b = 237.7;
 
-  const gamma=Math.log(RH/100)+(a*T_C)/(b+T_C);
-  const Td_C=(b*gamma)/(a-gamma);
-  const Td_F=Td_C*9/5+32;
-  const Td_K=Td_C+273.15;
+  const gamma = Math.log(RH / 100) + (a * T_C) / (b + T_C);
+  const Td_C = (b * gamma) / (a - gamma);
+  const Td_F = Td_C * 9 / 5 + 32;
+  const Td_K = Td_C + 273.15;
 
-  /* ---- Comfort classification ---- */
   const comfort =
     Td_C >= 24 ? "Extremely humid (oppressive)" :
     Td_C >= 21 ? "Very humid (uncomfortable)" :
@@ -205,11 +202,11 @@ function calculateDewPoint(){
     "Very dry";
 
   const badgeValue =
-    unit==="F" ? `${Td_F.toFixed(1)} °F` :
-    unit==="K" ? `${Td_K.toFixed(1)} K` :
+    unit === "F" ? `${Td_F.toFixed(1)} °F` :
+    unit === "K" ? `${Td_K.toFixed(1)} K` :
     `${Td_C.toFixed(1)} °C`;
 
-  out.innerHTML=`
+  out.innerHTML = `
     <span class="badge">Dew Point: ${badgeValue}</span>
     <span class="badge">${comfort}</span>
 
