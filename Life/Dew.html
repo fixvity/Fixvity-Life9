@@ -159,19 +159,26 @@ function calculateDewPoint(){
 
   /* ---- Convert temperature to Celsius ---- */
   let T_C,T_F,T_K;
+
   if(unit==="C"){ 
     T_C=Tval; 
     T_F=T_C*9/5+32; 
     T_K=T_C+273.15; 
   }
+
   if(unit==="F"){ 
     T_F=Tval; 
     T_C=(T_F-32)*5/9; 
     T_K=T_C+273.15; 
   }
+
   if(unit==="K"){ 
-    if(Tval<=0){
-      out.innerHTML="<div class='warning'>Kelvin temperature must be greater than 0 K.</div>";
+    if(Tval < 183.15){
+      out.innerHTML = `
+        <div class='warning'>
+          Dew point is not physically defined for temperatures below −90 °C (183 K).
+          Atmospheric moisture cannot exist under these conditions.
+        </div>`;
       return;
     }
     T_K=Tval; 
